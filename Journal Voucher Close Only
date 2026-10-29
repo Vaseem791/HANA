@@ -1,0 +1,53 @@
+CREATE PROCEDURE "SP_GET_JOURNAL_VOUCHER1" (
+    IN BatchNum VARCHAR(50)
+)
+
+AS
+BEGIN
+
+    SELECT DISTINCT
+        V."BatchNum"    AS "Journal Voucher No",
+        V."Status"      AS "Voucher Status",
+        J."TransId" ,    
+        J."Number"      AS "Journal Entry No",
+        TO_VARCHAR(J."RefDate", 'DD/MM/YYYY') AS "RefDate",
+        TO_VARCHAR(J."DueDate", 'DD/MM/YYYY') AS "DueDate",
+        TO_VARCHAR(J."TaxDate", 'DD/MM/YYYY') AS "TaxDate", 
+        J."Memo",J."Number" AS "DocNum",L."LineMemo",
+        f."TrnsCodDsc",
+        L."Line_ID"     AS "Line No", 
+        P."PrjCode"     AS "LPrjCode", 
+        P."PrjName"     AS "LPrjName",
+        L."Account"     AS "Account Code", 
+        J."Ref1",BP."CardCode",
+        BP."CardName",
+        A."AcctName"    AS "Account Name", 
+        t10."SeriesName",
+        L."ShortName"   AS "BP / Account Code",
+        L."Debit"       AS "Debit",
+        L."Credit"      AS "Credit", 
+        U1."U_NAME"     As "PreparedBy",
+        
+        CAST(NULL AS VARCHAR(100)) AS "Approved By",
+        
+        aa."CompnyName", 
+        aa."CompnyAddr", 
+        aa."Phone1"     AS "CompnyPhone1", 
+        aa."Phone2"     AS "CompnyPhone2", 
+        aa."E_Mail"     AS "CompnyEmail"  
+
+    FROM OBTD V
+    CROSS JOIN "OADM" aa
+    CROSS JOIN "ADM1" bb
+    INNER JOIN OJDT J ON V."BatchNum" = J."BatchNum"
+    INNER JOIN JDT1 L ON J."TransId" = L."TransId"
+     LEFT JOIN "OCRD" BP ON L."ShortName" = BP."CardCode"
+    LEFT JOIN OACT A ON L."Account" = A."AcctCode" 
+    LEFT JOIN OUSR U1 ON J."UserSign" = U1."USERID"
+    LEFT JOIN OPRJ P ON L."Project" = P."PrjCode"
+    LEFT JOIN OTRC f ON J."TransCode" = f."TrnsCode"
+    LEFT JOIN NNM1 t10 ON t10."Series" = J."Series"
+    WHERE V."BatchNum" = :BatchNum
+    ORDER BY V."BatchNum", J."TransId", L."Line_ID";
+
+END;
